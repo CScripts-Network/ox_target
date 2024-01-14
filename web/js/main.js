@@ -1,25 +1,37 @@
-import { createOptions } from "./createOptions.js";
+import { createOptions } from './createOptions.js';
 
-const optionsWrapper = document.getElementById("options-wrapper");
+const optionsWrapper = document.getElementById('options-wrapper');
 const body = document.body;
-const eye = document.getElementById("eyeSvg");
+const eye = document.getElementById('eyeSvg');
 
-window.addEventListener("message", (event) => {
-  optionsWrapper.innerHTML = "";
+window.addEventListener('message', (event) => {
+  optionsWrapper.innerHTML = '';
 
   switch (event.data.event) {
-    case "visible": {
-      body.style.visibility = event.data.state ? "visible" : "hidden";
-      return eye.classList.remove("eye-hover");
+    case 'visible': {
+      if(!event.data.state) {
+        $('.eye').stop().animate({opacity: 0})
+        $('.eye').removeClass('target-eye-active')
+        $('.options-wrapperw').stop().animate({opacity: 0})
+      } else {
+        $('.eye').stop().animate({opacity: 0.6})
+      }
+      
+      body.style.visibility = event.data.state ? 'visible' : 'hidden';
+      return (eye.style.fill = 'black');
     }
 
-    case "leftTarget": {
-      return eye.classList.remove("eye-hover");
+    case 'leftTarget': {
+      $('.eye').removeClass('target-eye-active')
+      $('.eye').stop().animate({opacity: 0.6})
+      $('.options-wrapperw').stop().animate({opacity: 0})
+      return (eye.style.fill = 'black');
     }
 
-    case "setTarget": {
-      eye.classList.add("eye-hover");
-
+    case 'setTarget': {
+      eye.style.fill = '#cfd2da';
+      $('.eye').addClass('target-eye-active')
+      $('.eye').stop().animate({opacity: 1})
       if (event.data.options) {
         for (const type in event.data.options) {
           event.data.options[type].forEach((data, id) => {
@@ -27,14 +39,7 @@ window.addEventListener("message", (event) => {
           });
         }
       }
-
-      if (event.data.zones) {
-        for (let i = 0; i < event.data.zones.length; i++) {
-          event.data.zones[i].forEach((data, id) => {
-            createOptions("zones", data, id + 1, i + 1);
-          });
-        }
-      }
+      $('.options-wrapperw').stop().animate({opacity: 1})
     }
   }
 });

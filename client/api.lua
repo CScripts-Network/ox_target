@@ -1,118 +1,57 @@
----@class OxTargetOption
----@field resource? string
-
-local utils = require 'client.utils'
-
-local api = setmetatable({}, {
+target = setmetatable({}, {
     __newindex = function(self, index, value)
         rawset(self, index, value)
         exports(index, value)
     end
 })
 
----@param data OxTargetPolyZone | table
+---@param data table
 ---@return number
-function api.addPolyZone(data)
-    if data.debug then utils.warn('Creating new PolyZone with debug enabled.') end
-
+function target.addPolyZone(data)
     data.resource = GetInvokingResource()
     return lib.zones.poly(data).id
 end
 
----@param data OxTargetBoxZone | table
+---@param data table
 ---@return number
-function api.addBoxZone(data)
-    if data.debug then utils.warn('Creating new BoxZone with debug enabled.') end
-
+function target.addBoxZone(data)
     data.resource = GetInvokingResource()
     return lib.zones.box(data).id
 end
 
----@param data OxTargetSphereZone | table
+---@param data table
 ---@return number
-function api.addSphereZone(data)
-    if data.debug then utils.warn('Creating new SphereZone with debug enabled.') end
-
+function target.addSphereZone(data)
     data.resource = GetInvokingResource()
     return lib.zones.sphere(data).id
 end
 
----@param id number | string
----@param suppressWarning boolean?
-function api.removeZone(id, suppressWarning)
-    if Zones then
-        if type(id) == 'string' then
-            local foundZone
-
-            for _, v in pairs(Zones) do
-                if v.name == id then
-                    foundZone = true
-                    v:remove()
-                end
-            end
-
-            if foundZone then return end
-        elseif Zones[id] then
-            return Zones[id]:remove()
-        end
-    end
-
-    if suppressWarning then return end
-
-    warn(('attempted to remove a zone that does not exist (id: %s)'):format(id))
-end
-
----Throws a formatted type error
----@param variable string
----@param expected string
----@param received string
-local function typeError(variable, expected, received)
-    error(("expected %s to have type '%s' (received %s)"):format(variable, expected, received))
+---@param id number
+function target.removeZone(id)
+    Zones[id]:remove()
 end
 
 ---@param target table
----@param options OxTargetOption | OxTargetOption[]
+---@param options table
 ---@param resource string
 local function addTarget(target, options, resource)
     local optionsType = type(options)
 
     if optionsType ~= 'table' then
-        typeError('options', 'table', optionsType)
+        TypeError('options', 'table', optionsType)
     end
-
-    local tableType = table.type(options)
-
-    if tableType == 'hash' and options.label then
-        options = { options --[[@as OxTargetOption]] }
-    elseif tableType ~= 'array' then
-        typeError('options', 'array', ('%s table'):format(tableType))
-    end
-
-    ---@cast options OxTargetOption[]
 
     local num = #target
 
     for i = 1, #options do
-        local option = options[i]
-        option.resource = resource or 'ox_target'
-
-        if not resource then
-            if option.canInteract then
-                option.canInteract = msgpack.unpack(msgpack.pack(option.canInteract))
-            end
-
-            if option.onSelect then
-                option.onSelect = msgpack.unpack(msgpack.pack(option.onSelect))
-            end
-        end
-
         num += 1
+        options[i].resource = resource or 'ox_target'
         target[num] = options[i]
     end
 end
 
 ---@param target table
----@param remove string | string[]
+---@param remove table
 ---@param resource string
 local function removeTarget(target, remove, resource)
     if type(remove) ~= 'table' then remove = { remove } end
@@ -130,107 +69,101 @@ local function removeTarget(target, remove, resource)
     end
 end
 
----@type table<number, OxTargetOption[]>
-local peds = {}
+local Peds = {}
 
----@param options OxTargetOption | OxTargetOption[]
-function api.addGlobalPed(options)
-    addTarget(peds, options, GetInvokingResource())
+---@param options table
+function target.addGlobalPed(options)
+    addTarget(Peds, options, GetInvokingResource())
 end
 
----@param options string | string[]
-function api.removeGlobalPed(options)
-    removeTarget(peds, options, GetInvokingResource())
+---@param options table
+function target.removeGlobalPed(options)
+    removeTarget(Peds, options, GetInvokingResource())
 end
 
----@type table<number, OxTargetOption[]>
-local vehicles = {}
+local Vehicles = {}
 
----@param options OxTargetOption | OxTargetOption[]
-function api.addGlobalVehicle(options)
-    addTarget(vehicles, options, GetInvokingResource())
+---@param options table
+function target.addGlobalVehicle(options)
+    addTarget(Vehicles, options, GetInvokingResource())
 end
 
----@param options string | string[]
-function api.removeGlobalVehicle(options)
-    removeTarget(vehicles, options, GetInvokingResource())
+---@param options table
+function target.removeGlobalVehicle(options)
+    removeTarget(Vehicles, options, GetInvokingResource())
 end
 
----@type table<number, OxTargetOption[]>
-local objects = {}
+local Objects = {}
 
----@param options OxTargetOption | OxTargetOption[]
-function api.addGlobalObject(options)
-    addTarget(objects, options, GetInvokingResource())
+---@param options table
+function target.addGlobalObject(options)
+    addTarget(Objects, options, GetInvokingResource())
 end
 
----@param options string | string[]
-function api.removeGlobalObject(options)
-    removeTarget(objects, options, GetInvokingResource())
+---@param options table
+function target.removeGlobalObject(options)
+    removeTarget(Objects, options, GetInvokingResource())
 end
 
----@type table<number, OxTargetOption[]>
-local players = {}
+local Players = {}
 
----@param options OxTargetOption | OxTargetOption[]
-function api.addGlobalPlayer(options)
-    addTarget(players, options, GetInvokingResource())
+---@param options table
+function target.addGlobalPlayer(options)
+    addTarget(Players, options, GetInvokingResource())
 end
 
----@param options string | string[]
-function api.removeGlobalPlayer(options)
-    removeTarget(players, options, GetInvokingResource())
+---@param options table
+function target.removeGlobalPlayer(options)
+    removeTarget(Players, options, GetInvokingResource())
 end
 
----@type table<number, OxTargetOption[]>
-local models = {}
-
----@param arr (number | string) | (number | string)[]
----@param options OxTargetOption | OxTargetOption[]
-function api.addModel(arr, options)
-    if type(arr) ~= 'table' then arr = { arr } end
-    local resource = GetInvokingResource()
-
-    for i = 1, #arr do
-        local model = arr[i]
-        model = tonumber(model) or joaat(model)
-
-        if not models[model] then
-            models[model] = {}
-        end
-
-        addTarget(models[model], options, resource)
-    end
-end
-
----@param arr (number | string) | (number | string)[]
----@param options? string | string[]
-function api.removeModel(arr, options)
-    if type(arr) ~= 'table' then arr = { arr } end
-    local resource = GetInvokingResource()
-
-    for i = 1, #arr do
-        local model = arr[i]
-        model = tonumber(model) or joaat(model)
-
-        if models[model] then
-            if options then
-                removeTarget(models[model], options, resource)
-            end
-
-            if not options or #models[model] == 0 then
-                models[model] = nil
-            end
-        end
-    end
-end
-
----@type table<number, OxTargetOption[]>
-local entities = {}
+local Models = {}
 
 ---@param arr number | number[]
----@param options OxTargetOption | OxTargetOption[]
-function api.addEntity(arr, options)
+---@param options table
+function target.addModel(arr, options)
+    if type(arr) ~= 'table' then arr = { arr } end
+    local resource = GetInvokingResource()
+
+    for i = 1, #arr do
+        local model = arr[i]
+        model = type(model) == 'string' and joaat(model) or model
+
+        if not Models[model] then
+            Models[model] = {}
+        end
+
+        addTarget(Models[model], options, resource)
+    end
+end
+
+---@param arr number | number[]
+---@param options? table
+function target.removeModel(arr, options)
+    if type(arr) ~= 'table' then arr = { arr } end
+    local resource = GetInvokingResource()
+
+    for i = 1, #arr do
+        local model = arr[i]
+        model = type(model) == 'string' and joaat(model) or model
+
+        if Models[model] then
+            if options then
+                removeTarget(Models[model], options, resource)
+            end
+
+            if not options or #Models[model] == 0 then
+                Models[model] = nil
+            end
+        end
+    end
+end
+
+local Entities = {}
+
+---@param arr number | number[]
+---@param options table
+function target.addEntity(arr, options)
     if type(arr) ~= 'table' then arr = { arr } end
     local resource = GetInvokingResource()
 
@@ -238,98 +171,79 @@ function api.addEntity(arr, options)
         local netId = arr[i]
 
         if NetworkDoesNetworkIdExist(netId) then
-            if not entities[netId] then
-                entities[netId] = {}
-
-                if not Entity(NetworkGetEntityFromNetworkId(netId)).state.hasTargetOptions then
-                    TriggerServerEvent('ox_target:setEntityHasOptions', netId)
-                end
+            if not Entities[netId] then
+                Entities[netId] = {}
             end
 
-            addTarget(entities[netId], options, resource)
-        end
-    end
-end
-
----@param arr number | number[]
----@param options? string | string[]
-function api.removeEntity(arr, options)
-    if type(arr) ~= 'table' then arr = { arr } end
-    local resource = GetInvokingResource()
-
-    for i = 1, #arr do
-        local netId = arr[i]
-
-        if entities[netId] then
-            if options then
-                removeTarget(entities[netId], options, resource)
-            end
-
-            if not options or #entities[netId] == 0 then
-                entities[netId] = nil
-            end
-        end
-    end
-end
-
-RegisterNetEvent('ox_target:removeEntity', api.removeEntity)
-
----@type table<number, OxTargetOption[]>
-local localEntities = {}
-
----@param arr number | number[]
----@param options OxTargetOption | OxTargetOption[]
-function api.addLocalEntity(arr, options)
-    if type(arr) ~= 'table' then arr = { arr } end
-    local resource = GetInvokingResource()
-
-    for i = 1, #arr do
-        local entityId = arr[i]
-
-        if DoesEntityExist(entityId) then
-            if not localEntities[entityId] then
-                localEntities[entityId] = {}
-            end
-
-            addTarget(localEntities[entityId], options, resource)
-        else
-            print(("No entity with id '%s' exists."):format(entityId))
+            addTarget(Entities[netId], options, resource)
         end
     end
 end
 
 ---@param arr number | number[]
 ---@param options? table
-function api.removeLocalEntity(arr, options)
+function target.removeEntity(arr, options)
+    if type(arr) ~= 'table' then arr = { arr } end
+    local resource = GetInvokingResource()
+
+    for i = 1, #arr do
+        local netId = arr[i]
+
+        if Entities[netId] then
+            if options then
+                removeTarget(Entities[netId], options, resource)
+            end
+
+            if not options or #Entities[netId] == 0 then
+                Entities[netId] = nil
+            end
+        end
+    end
+end
+
+local LocalEntities = {}
+
+---@param arr number | number[]
+---@param options table
+function target.addLocalEntity(arr, options)
     if type(arr) ~= 'table' then arr = { arr } end
     local resource = GetInvokingResource()
 
     for i = 1, #arr do
         local entity = arr[i]
 
-        if localEntities[entity] then
-            if options then
-                removeTarget(localEntities[entity], options, resource)
+        if DoesEntityExist(entity) then
+            if not LocalEntities[entity] then
+                LocalEntities[entity] = {}
             end
 
-            if not options or #localEntities[entity] == 0 then
-                localEntities[entity] = nil
-            end
+            addTarget(LocalEntities[entity], options, resource)
+        else
+            print(("No entity with id '%s' exists."):format(entity))
         end
     end
 end
 
-CreateThread(function()
-    while true do
-        Wait(60000)
+---@param arr number | number[]
+---@param options? table
+function target.removeLocalEntity(arr, options)
+    if type(arr) ~= 'table' then arr = { arr } end
+    local resource = GetInvokingResource()
 
-        for entityId in pairs(localEntities) do
-            if not DoesEntityExist(entityId) then
-                localEntities[entityId] = nil
+    for i = 1, #arr do
+        local entity = arr[i]
+
+        if LocalEntities[entity] then
+            if options then
+                removeTarget(LocalEntities[entity], options, resource)
+            end
+
+            if not options or #LocalEntities[entity] == 0 then
+                LocalEntities[entity] = nil
             end
         end
     end
-end)
+end
 
 ---@param resource string
 ---@param target table
@@ -367,8 +281,8 @@ end
 
 ---@param resource string
 AddEventHandler('onClientResourceStop', function(resource)
-    removeResourceGlobals(resource, { peds, vehicles, objects, players })
-    removeResourceTargets(resource, { models, entities, localEntities })
+    removeResourceGlobals(resource, { Peds, Vehicles, Objects, Players })
+    removeResourceTargets(resource, { Models, Entities, LocalEntities })
 
     if Zones then
         for _, v in pairs(Zones) do
@@ -386,11 +300,11 @@ local NetworkGetNetworkIdFromEntity = NetworkGetNetworkIdFromEntity
 ---@param _type number
 ---@param model number
 ---@return table
-function api.getEntityOptions(entity, _type, model)
+function GetEntityOptions(entity, _type, model)
     if _type == 1 then
         if IsPedAPlayer(entity) then
             return {
-                global = players
+                global = Players
             }
         end
     end
@@ -399,29 +313,17 @@ function api.getEntityOptions(entity, _type, model)
     local global
 
     if _type == 1 then
-        global = peds
+        global = Peds
     elseif _type == 2 then
-        global = vehicles
+        global = Vehicles
     else
-        global = objects
+        global = Objects
     end
 
     return {
         global = global,
-        model = models[model],
-        entity = netId and entities[netId] or nil,
-        localEntity = localEntities[entity],
+        model = Models[model],
+        entity = netId and Entities[netId] or nil,
+        localEntity = LocalEntities[entity],
     }
 end
-
-local state = require 'client.state'
-
-function api.disableTargeting(value)
-    if value then
-        state.setActive(false)
-    end
-
-    state.setDisabled(value)
-end
-
-return api

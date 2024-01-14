@@ -1,9 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&display=swap");
-
-:root {
-  --color-default: #cfd2da;
-  --color-hover: white;
-}
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Azeret+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
 body {
   visibility: hidden;
@@ -19,7 +15,16 @@ p {
 }
 
 .material-symbols-outlined {
-  font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 40;
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 40;
+}
+
+.eye {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%) rotate(45deg) scale(0.3);
+	opacity: 0;
+	transition: all .48s cubic-bezier(0.075, 0.82, 0.165, 1);
 }
 
 #eye {
@@ -28,64 +33,64 @@ p {
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: 22pt;
-  fill: black;
 }
 
-.eye-hover {
-  fill: var(--color-default);
+.target-eye-active {
+	transform: translate(-50%, -50%) rotate(0deg) scale(0.5);
+	opacity: 1;
 }
+
+.target-eye-default {
+	transform: translate(-50%, -50%) rotate(45deg) scale(0.4);
+	opacity: 0.3;
+}
+
 
 #options-wrapper {
-  position: absolute;
-  top: calc(48.4%);
-  left: calc(50% + 18pt);
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	left: 50%;
+	margin-left: 3vh;
+	margin-top: -1.35vh;
+	opacity: 0;
+}
+
+.options-wrapperw {
+  opacity: 0;
 }
 
 .option-container {
-  color: var(--color-default);
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: center;
-  font-family: "Nunito";
-  background: linear-gradient(
-    90deg,
-    rgba(20, 20, 20, 0.7) 0%,
-    rgba(20, 20, 20, 0.6) 66%,
-    rgba(47, 48, 53, 0) 100%
-  );
-  font-size: 11pt;
-  line-height: 22pt;
-  vertical-align: middle;
-  margin: 2pt;
-  transition: 300ms;
-  transform-origin: left top;
-  scale: 1;
-  height: 22pt;
-  width: 150pt;
-  top: 0;
+	border-radius: 0.1vw;
+	background: rgba(0, 0, 0, 0.6);
+	color: white;
+	border: 0px;
+	display: flex;
+	align-items: center;
+	margin-bottom: 0.5vh;
+	box-sizing: border-box;
+	padding: 0.4vw 0.6vw;
+	transform: translateX(0);
+	font-weight: 600;
+	transition: all .2s ease-in-out;
 }
 
 .option-container:hover {
-  background: linear-gradient(
-    90deg,
-    rgba(30, 30, 30, 0.7) 0%,
-    rgba(30, 30, 30, 0.6) 66%,
-    rgba(57, 58, 63, 0) 100%
-  );
-  transform-origin: left top;
-  color: var(--color-hover);
-  margin-left: 4pt;
+	opacity: 1;
+	color: black;
+	background: white;
+	transform: translateX(5%);
 }
 
 .option-icon {
-  font-size: 12pt;
-  line-height: 22pt;
-  width: 14pt;
-  margin: 5pt;
-  color: var(--color-default);
+  margin-right: 1vw;
 }
 
 .option-label {
-  font-weight: 500;
+	list-style: none;
+	font-size: 1.3vh;
+	font-family: 'Montserrat', sans-serif;
+	user-select: none;
+	white-space: nowrap;
+	padding-left: 0.2vh;
 }
