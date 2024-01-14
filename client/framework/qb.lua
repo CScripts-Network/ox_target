@@ -1,4 +1,3 @@
-if GetResourceState('qb-core') == 'missing' then return end
 local QBCore = exports['qb-core']:GetCoreObject()
 
 local success, result = pcall(function()
@@ -6,27 +5,22 @@ local success, result = pcall(function()
 end)
 
 local playerData = success and result or {}
-
-local usingOxInventory = GetResourceState('ox_inventory') ~= "missing"
-
-local playerItems = setmetatable({}, {
-    __index = function(self, index)
-        self[index] = usingOxInventory and exports.ox_inventory:Search('count', index) or playerData.items[index] or 0
-        return self[index]
-    end
-})
+local utils = require 'client.utils'
+local playerItems = utils.getItems()
 
 local function setPlayerItems()
+    if not playerData?.items then return end
+
+    table.wipe(playerItems)
+
     for _, item in pairs(playerData.items) do
-        playerItems[item.name] = item.amount
+        playerItems[item.name] = (playerItems[item.name] or 0) + item.amount
     end
 end
 
-if usingOxInventory then
-    AddEventHandler('ox_inventory:itemCount', function(name, count)
-        playerItems[name] = count
-    end)
-elseif next(playerData) then
+local usingOxInventory = utils.hasExport('ox_inventory.Items')
+
+if not usingOxInventory then
     setPlayerItems()
 end
 
@@ -37,11 +31,14 @@ end)
 
 RegisterNetEvent('QBCore:Player:SetPlayerData', function(val)
     if source == '' then return end
+
     playerData = val
-    if not usingOxInventory and playerData.items then setPlayerItems() end
+
+    if not usingOxInventory then setPlayerItems() end
 end)
 
-function PlayerHasGroups(filter)
+---@diagnostic disable-next-line: duplicate-set-field
+function utils.hasPlayerGotGroup(filter)
     local _type = type(filter)
 
     if _type == 'string' then
@@ -78,26 +75,4 @@ function PlayerHasGroups(filter)
             end
         end
     end
-end
-
-function PlayerHasItems(filter)
-    local _type = type(filter)
-
-    if _type == 'string' then
-        if playerItems[filter] < 1 then return end
-    elseif _type == 'table' then
-        local tabletype = table.type(filter)
-
-        if tabletype == 'hash' then
-            for name, amount in pairs(filter) do
-                if playerItems[name] < amount then return end
-            end
-        elseif tabletype == 'array' then
-            for i = 1, #filter do
-                if playerItems[filter[i]] < 1 then return end
-            end
-        end
-    end
-
-    return true
 end

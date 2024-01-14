@@ -10,11 +10,24 @@ local function convert(options)
     local distance = options.distance
     options = options.options
 
-    for _, v in pairs(options) do
+    -- People may pass options as a hashmap (or mixed, even)
+    for k, v in pairs(options) do
+        if type(k) ~= 'number' then
+            table.insert(options, v)
+        end
+    end
+
+    for id, v in pairs(options) do
+        if type(id) ~= 'number' then
+            options[id] = nil
+            goto continue
+        end
+
         v.onSelect = v.action
         v.distance = v.distance or distance
         v.name = v.name or v.label
         v.items = v.item
+        v.icon = v.icon
         v.groups = v.job
 
         local groupType = type(v.groups)
@@ -109,29 +122,40 @@ local function convert(options)
         v.gang = nil
         v.citizenid = nil
         v.item = nil
-        v.ox_target = true
+        v.qtarget = true
+
+        ::continue::
     end
 
     return options
 end
 
+local api = require 'client.api'
+
 exportHandler('AddBoxZone', function(name, center, length, width, options, targetoptions)
     local z = center.z
+
+    if not options.minZ then
+        options.minZ = -100
+    end
+
+    if not options.maxZ then
+        options.maxZ = 800
+    end
 
     if not options.useZ then
         z = z + math.abs(options.maxZ - options.minZ) / 2
         center = vec3(center.x, center.y, z)
     end
 
-    return lib.zones.box({
+    return api.addBoxZone({
         name = name,
         coords = center,
         size = vec3(width, length, (options.useZ or not options.maxZ) and center.z or math.abs(options.maxZ - options.minZ)),
         debug = options.debugPoly,
         rotation = options.heading,
         options = convert(targetoptions),
-        resource = GetInvokingResource(),
-    }).id
+    })
 end)
 
 exportHandler('AddPolyZone', function(name, points, options, targetoptions)
@@ -143,41 +167,27 @@ exportHandler('AddPolyZone', function(name, points, options, targetoptions)
         newPoints[i] = vec3(point.x, point.y, options.maxZ - (thickness / 2))
     end
 
-    return lib.zones.poly({
+    return api.addPolyZone({
         name = name,
         points = newPoints,
         thickness = thickness,
         debug = options.debugPoly,
         options = convert(targetoptions),
-        resource = GetInvokingResource(),
-    }).id
+    })
 end)
 
 exportHandler('AddCircleZone', function(name, center, radius, options, targetoptions)
-    return lib.zones.sphere({
+    return api.addSphereZone({
         name = name,
         coords = center,
         radius = radius,
         debug = options.debugPoly,
         options = convert(targetoptions),
-        resource = GetInvokingResource(),
-    }).id
+    })
 end)
 
 exportHandler('RemoveZone', function(id)
-    if Zones then
-        if type(id) == 'string' then
-            for _, v in pairs(Zones) do
-                if v.name == id then
-                    v:remove()
-                end
-            end
-        end
-
-        if Zones[id] then
-            Zones[id]:remove()
-        end
-    end
+    api.removeZone(id, true)
 end)
 
 exportHandler('AddTargetBone', function(bones, options)
@@ -199,9 +209,9 @@ exportHandler('AddTargetEntity', function(entities, options)
         local entity = entities[i]
 
         if NetworkGetEntityIsNetworked(entity) then
-            target.addEntity(NetworkGetNetworkIdFromEntity(entity), options)
+            api.addEntity(NetworkGetNetworkIdFromEntity(entity), options)
         else
-            target.addLocalEntity(entity, options)
+            api.addLocalEntity(entity, options)
         end
     end
 end)
@@ -213,49 +223,59 @@ exportHandler('RemoveTargetEntity', function(entities, labels)
         local entity = entities[i]
 
         if NetworkGetEntityIsNetworked(entity) then
-            target.removeEntity(NetworkGetNetworkIdFromEntity(entity), labels)
+            api.removeEntity(NetworkGetNetworkIdFromEntity(entity), labels)
         else
-            target.removeLocalEntity(entity, labels)
+            api.removeLocalEntity(entity, labels)
         end
     end
 end)
 
 exportHandler('AddTargetModel', function(models, options)
-    target.addModel(models, convert(options))
+    api.addModel(models, convert(options))
 end)
 
 exportHandler('RemoveTargetModel', function(models, labels)
-    target.removeModel(models, labels)
+    api.removeModel(models, labels)
 end)
 
 exportHandler('AddGlobalPed', function(options)
-    target.addGlobalPed(convert(options))
+    api.addGlobalPed(convert(options))
 end)
 
 exportHandler('RemoveGlobalPed', function(labels)
-    target.removeGlobalPed(labels)
+    api.removeGlobalPed(labels)
 end)
 
 exportHandler('AddGlobalVehicle', function(options)
-    target.addGlobalVehicle(convert(options))
+    api.addGlobalVehicle(convert(options))
 end)
 
 exportHandler('RemoveGlobalVehicle', function(labels)
-    target.removeGlobalVehicle(labels)
+    api.removeGlobalVehicle(labels)
 end)
 
 exportHandler('AddGlobalObject', function(options)
-    target.addGlobalObject(convert(options))
+    api.addGlobalObject(convert(options))
 end)
 
 exportHandler('RemoveGlobalObject', function(labels)
-    target.removeGlobalObject(labels)
+    api.removeGlobalObject(labels)
 end)
 
 exportHandler('AddGlobalPlayer', function(options)
-    target.addGlobalPlayer(convert(options))
+    api.addGlobalPlayer(convert(options))
 end)
 
 exportHandler('RemoveGlobalPlayer', function(labels)
-    target.removeGlobalPlayer(labels)
+    api.removeGlobalPlayer(labels)
+end)
+
+local utils = require 'client.utils'
+
+exportHandler('AddEntityZone', function()
+    utils.warn('AddEntityZone is not supported by ox_target - try using addEntity/addLocalEntity.')
+end)
+
+exportHandler('RemoveTargetBone', function()
+    utils.warn('RemoveTargetBone is not supported by ox_target.')
 end)
